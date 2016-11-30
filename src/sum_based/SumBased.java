@@ -1,7 +1,10 @@
 package sum_based;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.function.Function;
@@ -9,41 +12,56 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
 public class SumBased {
 
+	private static final int MIN_SENTENCE_LENGTH = 4;
+	private static final int FIRST_TEN = 10;
+	
 	public static String[] splitSentences(String text) {
 		return text.split("\\.|\\?|!");
 	}
 	
-	/* Extracts the words from a text and applies normalization to the words,
+	/** 
+	 * Extracts the words from a text and applies normalization to the words,
 	 * filtering out the ones that are closed words or contain non-alphabet symbols.
 	 */
-	public static Stream<String> extractWords(String text) {
-		return Arrays.stream(splitSentences(text))
-				.map(s -> Arrays.stream(StringUtils.split(s)))
-				.flatMap(Function.identity())
-				.map(word -> SummarizerTextUtils.normalizeWord(word))
+	public static Stream<String> extractWordsAndFilter(String text) {
+		return extractWordsWithoutFiltering(text)
 				.filter(s -> SummarizerTextUtils.shouldKeepWord(s));
 	}
 	
-	public static Map<String, Long> getWordFrequencies(String text) {
-		
-		return extractWords(text).collect(Collectors.groupingBy(e -> e, Collectors.counting()));
+	public static Stream<String> extractWordsWithoutFiltering(String text) {
+		return Arrays.stream(splitSentences(text))
+				.map(s -> Arrays.stream(StringUtils.split(s)))
+				.flatMap(Function.identity())
+				.map(word -> SummarizerTextUtils.normalizeWord(word));
 	}
 	
-	public static ArrayList<Pair<String, Long>> rankSentences(String text) {
+	/**
+	 * Returns the word frequency for each word in the text.
+	 */
+	public static Map<String, Long> getWordFrequencies(String text) {
+		return extractWordsAndFilter(text).collect(Collectors.groupingBy(e -> e, Collectors.counting()));
+	}
+	
+	/**
+	 * Ranks the sentences based on the sentence score function.
+	 */
+	public static ArrayList<SentenceInfo> rankSentences(String text) {
 		Map<String, Long> wordsFrequencies = getWordFrequencies(text);
-		outputWordFrequencies(wordsFrequencies);
-		ArrayList<Pair<String, Long>> sentenceScores = new ArrayList<>();
+		// outputWordFrequencies(wordsFrequencies);
+		ArrayList<SentenceInfo> sentenceScores = new ArrayList<>();
 		String[] sentences = splitSentences(text);
-		for (String sentence : sentences) {
-			String[] sentenceWords = extractWords(sentence).toArray(size -> new String[size]);
-			long score = SentenceEvaluator.Score(sentenceWords, wordsFrequencies);
-			sentenceScores.add(Pair.of(sentence, score));
+		for (int idx = 0; idx < sentences.length; idx++) {
+			String sentence = sentences[idx];
+			String[] sentenceWords = extractWordsWithoutFiltering(sentence).toArray(size -> new String[size]);
+			if ( sentenceWords.length >= MIN_SENTENCE_LENGTH) {
+				double score = SentenceEvaluator.averageScore(sentenceWords, wordsFrequencies);
+				sentenceScores.add(new SentenceInfo(score, idx, sentence));
+			}
 		}
-		sentenceScores.sort((o1, o2) -> Long.compare(o2.getRight(), o1.getRight()));
+		sentenceScores.sort((o1, o2) -> Double.compare(o2.score, o1.score));
 		
 		return sentenceScores;
 	}
@@ -54,16 +72,21 @@ public class SumBased {
 		}
 	}
 	
-	public static void main(String[] args) {
-		Scanner sc = new Scanner(System.in); // .useDelimiter("//.|?|!|:");
+	public static void main(String[] args) throws IOException{
+		Scanner sc = new Scanner(new File(args[0])); // .useDelimiter("//.|?|!|:");
 		StringBuffer buf = new StringBuffer();
 		while(sc.hasNextLine()) {
 			buf.append(" " + sc.nextLine());
 		}
 		// System.out.println(buf.toString());
-		ArrayList<Pair<String, Long>> rankedSentences = rankSentences(buf.toString());
-		for (Pair<String, Long> s : rankedSentences) {
-			System.out.println(s.getLeft() + " " + s.getRight());
+		List<SentenceInfo> rankedSentences = rankSentences(buf.toString()).subList(0, FIRST_TEN);
+		rankedSentences.sort((s1, s2) ->  Integer.compare(s1.idx, s2.idx));
+		Map<String, Long> wordsFrequencies = getWordFrequencies(buf.toString());
+		for (SentenceInfo s : rankedSentences) {
+			String[] sentence = extractWordsWithoutFiltering(s.rawSentence).toArray(size -> new String[size]);
+			int sentenceLength = sentence.length;
+			// SentenceEvaluator.outputSentence(sentence, wordsFrequencies);
+			System.out.println("(" + s.idx + ")" + s.rawSentence + " " + "(" + sentenceLength + ")");
 		}
 		sc.close();
 	}

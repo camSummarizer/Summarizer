@@ -11,7 +11,9 @@ public class SummarizerTextUtils {
 	private static Set<String> CLOSED_WORDS = new TreeSet<String>(Arrays.asList(new String[]{
 			"of", "to", "and", "I", "she", "he", "from", "a", "at", "by",
 			"on", "an", "the", "how", "into", "what", "that", "they", "if",
-			"i", "but", "about", "would", "you", "yourself", "her", "in"
+			"i", "but", "about", "would", "you", "yourself", "her", "in", "it",
+			"can", "when", "whether", "because", "my", "is", "me", "are", "as",
+			"for", "be", "not", "do"
 	}));
 	
 	/* Returns whether the word should be included in the document. */
