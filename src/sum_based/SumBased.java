@@ -48,7 +48,8 @@ public class SumBased {
 	/**
 	 * Ranks the sentences based on the sentence score function.
 	 */
-	public static ArrayList<SentenceInfo> rankSentences(String text) {
+	public static ArrayList<SentenceInfo> rankSentences(String text, 
+			SentenceEvaluatorFunction evaluator) {
 		Map<String, Long> wordsFrequencies = getWordFrequencies(text);
 		// outputWordFrequencies(wordsFrequencies);
 		ArrayList<SentenceInfo> sentenceScores = new ArrayList<>();
@@ -57,7 +58,7 @@ public class SumBased {
 			String sentence = sentences[idx];
 			String[] sentenceWords = extractWordsWithoutFiltering(sentence).toArray(size -> new String[size]);
 			if ( sentenceWords.length >= MIN_SENTENCE_LENGTH) {
-				double score = SentenceEvaluator.averageScore(sentenceWords, wordsFrequencies);
+				double score = evaluator.evaluateSentenceBasedOnFrequencies(sentenceWords, wordsFrequencies);
 				sentenceScores.add(new SentenceInfo(score, idx, sentence));
 			}
 		}
@@ -79,7 +80,7 @@ public class SumBased {
 			buf.append(" " + sc.nextLine());
 		}
 		// System.out.println(buf.toString());
-		List<SentenceInfo> rankedSentences = rankSentences(buf.toString()).subList(0, FIRST_TEN);
+		List<SentenceInfo> rankedSentences = rankSentences(buf.toString(), SentenceEvaluator::averageScore).subList(0, FIRST_TEN);
 		rankedSentences.sort((s1, s2) ->  Integer.compare(s1.idx, s2.idx));
 		Map<String, Long> wordsFrequencies = getWordFrequencies(buf.toString());
 		for (SentenceInfo s : rankedSentences) {
