@@ -22,13 +22,14 @@ public class SumBased {
 	 */
 	public static Stream<String> extractWords(String text) {
 		return Arrays.stream(splitSentences(text))
-				.map(s -> Arrays.stream(StringUtils.split(text)))
+				.map(s -> Arrays.stream(StringUtils.split(s)))
 				.flatMap(Function.identity())
 				.map(word -> SummarizerTextUtils.normalizeWord(word))
 				.filter(s -> SummarizerTextUtils.shouldKeepWord(s));
 	}
 	
 	public static Map<String, Long> getWordFrequencies(String text) {
+		
 		return extractWords(text).collect(Collectors.groupingBy(e -> e, Collectors.counting()));
 	}
 	
