@@ -13,7 +13,7 @@ public class SummarizerTextUtils {
 			"on", "an", "the", "how", "into", "what", "that", "they", "if",
 			"i", "but", "about", "would", "you", "yourself", "her", "in", "it",
 			"can", "when", "whether", "because", "my", "is", "me", "are", "as",
-			"for", "be", "not", "do"
+			"for", "be", "not", "do", "was"
 	}));
 	
 	/* Returns whether the word should be included in the document. */

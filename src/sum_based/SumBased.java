@@ -80,14 +80,14 @@ public class SumBased {
 			buf.append(" " + sc.nextLine());
 		}
 		// System.out.println(buf.toString());
-		List<SentenceInfo> rankedSentences = rankSentences(buf.toString(), SentenceEvaluator::averageScore).subList(0, FIRST_TEN);
+		List<SentenceInfo> rankedSentences = rankSentences(buf.toString(), SentenceEvaluator::averageScoreWithoutClosed).subList(0, FIRST_TEN + 1);
 		rankedSentences.sort((s1, s2) ->  Integer.compare(s1.idx, s2.idx));
 		Map<String, Long> wordsFrequencies = getWordFrequencies(buf.toString());
 		for (SentenceInfo s : rankedSentences) {
 			String[] sentence = extractWordsWithoutFiltering(s.rawSentence).toArray(size -> new String[size]);
 			int sentenceLength = sentence.length;
-			// SentenceEvaluator.outputSentence(sentence, wordsFrequencies);
-			System.out.println("(" + s.idx + ")" + s.rawSentence + " " + "(" + sentenceLength + ")");
+			//SentenceEvaluator.outputSentence(sentence, wordsFrequencies);
+			System.out.println("(" + s.idx + ")" + s.rawSentence + " " + s.score + " (" + sentenceLength + ")");
 		}
 		sc.close();
 	}
